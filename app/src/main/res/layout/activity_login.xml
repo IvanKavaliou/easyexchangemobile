@@ -31,6 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:hint="@string/password_repeat"
+        android:visibility="invisible"
         android:ems="10"
         android:inputType="textPassword" />
 
@@ -41,6 +42,7 @@
         android:layout_marginTop="10dp"
         android:textStyle="bold"
         android:text="@string/sign_in" />
+
     <CheckBox
         android:id="@+id/checkRegister"
         android:layout_width="wrap_content"
@@ -48,6 +50,19 @@
         android:layout_marginTop="10dp"
         android:textStyle="bold"
         android:text="@string/register"/>
+
+    <TextView
+        android:id="@+id/errorTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="errorTextView"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:shadowColor="#ff0000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="5"/>
 
 
 </LinearLayout>
