@@ -1,30 +1,29 @@
 package kavaliou.ivan.net.easyexchangemobile;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+
+import kavaliou.ivan.net.easyexchangemobile.model.User;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -58,7 +57,11 @@ public class LoginActivity extends AppCompatActivity {
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                login();
+                if (!checkRegister.isChecked()){
+                    login();
+                } else {
+                    regisrtation();
+                }
                 queue.start();
             }
         });
@@ -79,29 +82,28 @@ public class LoginActivity extends AppCompatActivity {
          });
     }
 
+    private void regisrtation() {
+
+    }
+
     private void login(){
         Map<String, String> params = new HashMap();
         params.put("email", editEmail.getText().toString().trim().toLowerCase());
         params.put("password", editPassword.getText().toString());
-
         JSONObject parameters = new JSONObject(params);
 
         JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, URL_LOGIN, parameters, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                try {
-                    errorTextView.setText(response.getString("email"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                    Gson gson = new Gson();
+                    User user = gson.fromJson(response.toString(),User.class);
+                    errorTextView.setText(user.toString());
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 String body;
-                //get status code here
                 String statusCode = String.valueOf(error.networkResponse.statusCode);
-                //get response body and parse with appropriate encoding
                 if(error.networkResponse.data!=null) {
                     try {
                         body = new String(error.networkResponse.data,"UTF-8");
@@ -110,7 +112,11 @@ public class LoginActivity extends AppCompatActivity {
                             if (statusCode.equals("406") || statusCode.equals("404")){
                                 errorTextView.setText(jsonError.getString("message"));
                             } else {
-                                errorTextView.setText(jsonError.getJSONArray("errors").toString());
+                                JSONArray errors = jsonError.getJSONArray("errors");
+                                errorTextView.setText("");
+                                for (int i = 0; i < errors.length(); i++){
+                                    errorTextView.setText(errorTextView.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
+                                }
                             }
                         }catch (JSONException e){
                             e.printStackTrace();
