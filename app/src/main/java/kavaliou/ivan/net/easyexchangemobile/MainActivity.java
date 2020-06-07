@@ -12,7 +12,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.math.BigDecimal;
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity
     private User user;
     private ListView accountsList;
     private ListView transactionsList;
+    private LinearLayout topupLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +84,16 @@ public class MainActivity extends AppCompatActivity
         TransactionsListAdapter transactionsListAdapter = new TransactionsListAdapter(this, transactions);
         transactionsList = (ListView) findViewById(R.id.transactions_list);
         transactionsList.setAdapter(transactionsListAdapter);
+
+        //Top UP Layout Initalization
+        topupLayout = (LinearLayout) findViewById(R.id.topupLayout);
+        Spinner spinnerAccounts = findViewById(R.id.spinnerAccounts);
+        String[] items = new String[CurrencyType.values().length];
+        for (int i=0; i< accounts.size(); i++){
+            items[i] = accounts.get(i).getCurrency().name();
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+        spinnerAccounts.setAdapter(adapter);
     }
 
     @Override
@@ -123,13 +137,17 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_accounts) {
             accountsList.setVisibility(View.VISIBLE);
             transactionsList.setVisibility(View.INVISIBLE);
+            topupLayout.setVisibility(View.INVISIBLE);
         } else if (id == R.id.nav_transactions) {
-            accountsList.setVisibility(View.INVISIBLE);
             transactionsList.setVisibility(View.VISIBLE);
+            accountsList.setVisibility(View.INVISIBLE);
+            topupLayout.setVisibility(View.INVISIBLE);
         } else if (id == R.id.nav_currency_rates) {
 
         } else if (id == R.id.nav_top_up) {
-
+            topupLayout.setVisibility(View.VISIBLE);
+            accountsList.setVisibility(View.INVISIBLE);
+            transactionsList.setVisibility(View.INVISIBLE);
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_logout) {

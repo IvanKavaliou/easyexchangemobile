@@ -20,4 +20,31 @@
         android:layout_height="match_parent"
         android:visibility="invisible"/>
 
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/topupLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible"
+        android:orientation="vertical" >
+        <Spinner
+            android:id="@+id/spinnerAccounts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/btn_dropdown"
+            android:spinnerMode="dropdown"/>
+        <EditText
+            android:id="@+id/editTextTopUpValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="Value"
+            android:inputType="numberDecimal" />
+        <Button
+            android:id="@+id/buttonTopUp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Top up"/>
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>
