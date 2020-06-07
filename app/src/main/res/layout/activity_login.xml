@@ -8,10 +8,16 @@
     tools:context=".LoginActivity"
     android:orientation="vertical">
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="182dp"
+        android:src="@drawable/ee_logo" />
+
     <EditText
         android:id="@+id/editEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
         android:hint="@string/email"
         android:ems="10"
         android:inputType="textEmailAddress" />

@@ -1,5 +1,6 @@
 package kavaliou.ivan.net.easyexchangemobile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -82,6 +83,12 @@ public class LoginActivity extends AppCompatActivity {
          });
     }
 
+    private void startMainActivity(User user){
+        Intent i = new Intent(this, MainActivity.class);
+        i.putExtra("user", user);
+        startActivity(i);
+    }
+
     private void regisrtation() {
 
     }
@@ -98,6 +105,7 @@ public class LoginActivity extends AppCompatActivity {
                     Gson gson = new Gson();
                     User user = gson.fromJson(response.toString(),User.class);
                     errorTextView.setText(user.toString());
+                    startMainActivity(user);
             }
         }, new Response.ErrorListener() {
             @Override
