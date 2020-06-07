@@ -11,10 +11,9 @@ import lombok.Data;
 @Data
 @Builder
 public class Transaction implements Serializable {
-
     private Integer id;
     private Account account;
     private BigDecimal value;
     private TransactionType transaction;
-    private Date date = new Date();
+    private Date date;
 }
