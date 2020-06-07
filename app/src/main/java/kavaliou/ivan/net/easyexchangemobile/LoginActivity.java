@@ -38,7 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     private static String URL_LOGIN = "http://192.168.0.101:8080/login";
     private static String URL_REGISTRATION = "http://192.168.0.101:8080/registration";
 
-    RequestQueue queue;
+    private RequestQueue queue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +94,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void login(){
+        editEmail.setText("user@user.com");
+        editPassword.setText("user");
         Map<String, String> params = new HashMap();
         params.put("email", editEmail.getText().toString().trim().toLowerCase());
         params.put("password", editPassword.getText().toString());
