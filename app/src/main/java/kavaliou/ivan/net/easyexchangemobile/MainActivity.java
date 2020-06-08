@@ -14,7 +14,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -38,15 +41,18 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import kavaliou.ivan.net.easyexchangemobile.Adapters.AccountsListAdapter;
 import kavaliou.ivan.net.easyexchangemobile.Adapters.CurrencysRatesListAdapter;
 import kavaliou.ivan.net.easyexchangemobile.Adapters.TransactionsListAdapter;
 import kavaliou.ivan.net.easyexchangemobile.model.Account;
 import kavaliou.ivan.net.easyexchangemobile.model.CurrencyRate;
+import kavaliou.ivan.net.easyexchangemobile.model.TopUp;
 import kavaliou.ivan.net.easyexchangemobile.model.Transaction;
 import kavaliou.ivan.net.easyexchangemobile.model.User;
 import kavaliou.ivan.net.easyexchangemobile.utils.enums.CurrencyType;
@@ -62,7 +68,8 @@ public class MainActivity extends AppCompatActivity
     private LinearLayout topupLayout;
 
     private  ArrayList<Account> accounts;
-    ArrayList<Transaction> transactions;
+    private ArrayList<Transaction> transactions;
+    private ArrayList<CurrencyRate> currencyRates;
 
     private TextView textErrors;
 
@@ -70,6 +77,8 @@ public class MainActivity extends AppCompatActivity
 
     private static final String URL_GET_ACCOUNTS ="http://192.168.0.101:8080/accounts";
     private static final String URL_GET_TRANSACTIONS ="http://192.168.0.101:8080/transactions";
+    private static final String URL_GET_RATES ="http://192.168.0.101:8080/rates";
+    private static final String URL_TOP_UP = "http://192.168.0.101:8080/topup";
 
 
     @Override
@@ -97,33 +106,188 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        user = (User) getIntent().getSerializableExtra("user");
-        View headerView = navigationView.getHeaderView(0);
-        TextView textViewEmail = (TextView) headerView.findViewById(R.id.textViewEmail);
-        textViewEmail.setText(user.getEmail());
-
         textErrors = (TextView) findViewById(R.id.textErrors);
+
+        initUser();
 
         //Accounts List Initialization
         queue = Volley.newRequestQueue(this);
+        accountsList = (ListView) findViewById(R.id.accounts_list);
         initAccounts();
 
         //Transaction List Initialization
+        transactionsList = (ListView) findViewById(R.id.transactions_list);
         initTransactions();
-        queue.start();
 
         //Top UP Layout Initialization
-        topupLayout = (LinearLayout) findViewById(R.id.topupLayout);
-        TextView textBalance = (TextView) findViewById(R.id.textBalance);
-        textBalance.setText("Balance: " + user.getBalance());
+        initTopUP();
 
         //Currency Rates List Initialization
-        ArrayList<CurrencyRate> currencyRates = new ArrayList<>();
-        currencyRates.add(CurrencyRate.builder().currency("dollar amerikanski").code(CurrencyType.USD).bid(BigDecimal.valueOf(4.23)).ask(BigDecimal.valueOf(4.11)).build());
-        currencyRates.add(CurrencyRate.builder().currency("euro").code(CurrencyType.EUR).bid(BigDecimal.valueOf(4.43)).ask(BigDecimal.valueOf(4.21)).build());
-        CurrencysRatesListAdapter currencysRatesListAdapter = new CurrencysRatesListAdapter(this, currencyRates);
         currencyRatesList = (ListView) findViewById(R.id.currecny_rates_list);
-        currencyRatesList.setAdapter(currencysRatesListAdapter);
+        initCurrencyRates();
+
+        queue.start();
+    }
+
+    private void update(){
+        initUser();
+        initAccounts();
+        initTransactions();
+        initTopUP();
+        queue.start();
+    }
+
+    private void initTopUP(){
+        final EditText editTextTopUpValue = (EditText) findViewById(R.id.editTextTopUpValue);
+        topupLayout = (LinearLayout) findViewById(R.id.topupLayout);
+        TextView textBalance = (TextView) findViewById(R.id.textBalance);
+        textBalance.setText("Balance: " + user.getBalance()+ " PLN");
+        Button buttonTopUp = (Button) findViewById(R.id.buttonTopUp);
+        buttonTopUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TopUp t = new TopUp();
+                t.setValue(BigDecimal.valueOf(Double.valueOf(editTextTopUpValue.getText().toString())));
+                topUp(t);
+            }
+        });
+    }
+
+    private void topUp(final TopUp topUp){
+        final Context context = this;
+        Map<String, String> params = new HashMap();
+        params.put("value", topUp.getValue().toString());
+        JSONObject parameters = new JSONObject(params);
+        //QUEEE
+        JsonObjectRequest jRequest = new JsonObjectRequest(Request.Method.POST, URL_TOP_UP, parameters,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Gson gson = new Gson();
+                        TopUp t  = gson.fromJson(response.toString(),TopUp.class);
+                        user.setBalance(t.getValue());
+                        update();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        String body;
+                        if (error.networkResponse != null){
+                            String statusCode = String.valueOf(error.networkResponse.statusCode);
+                            if(error.networkResponse.data!=null) {
+                                try {
+                                    body = new String(error.networkResponse.data,"UTF-8");
+                                    try {
+                                        JSONObject jsonError = new JSONObject(body);
+                                        if (statusCode.equals("406") || statusCode.equals("404")){
+                                            textErrors.setText(jsonError.getString("message"));
+                                        } else {
+                                            JSONArray errors = jsonError.getJSONArray("errors");
+                                            textErrors.setText("");
+                                            for (int i = 0; i < errors.length(); i++){
+                                                textErrors.setText(textErrors.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
+                                            }
+                                        }
+                                        textErrors.setVisibility(View.VISIBLE);
+                                    }catch (JSONException e){
+                                        e.printStackTrace();
+                                    }
+                                } catch (UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                })
+
+        {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> params = new HashMap<String, String>();
+                String creds = String.format("%s:%s",user.getEmail(),user.getPassword());
+                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.DEFAULT);
+                params.put("Authorization", auth);
+                return params;
+            }
+        };
+        Volley.newRequestQueue(this).add(jRequest);
+    }
+
+    private void initUser(){
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        user = (User) getIntent().getSerializableExtra("user");
+        View headerView = navigationView.getHeaderView(0);
+        TextView textViewEmail = (TextView) headerView.findViewById(R.id.textViewEmail);
+        TextView textMenueBalance = (TextView) headerView.findViewById(R.id.textMenueBalance);
+        textMenueBalance.setText("Balance: " + user.getBalance().toString() + " PLN");
+        textViewEmail.setText(user.getEmail());
+    }
+
+    private void initCurrencyRates(){
+        currencyRates = new ArrayList<>();
+        final Context context = this;
+        //QUEEE
+        JsonArrayRequest jRequest = new JsonArrayRequest(Request.Method.GET, URL_GET_RATES, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Gson gson = new Gson();
+                        for (int i =0; i < response.length(); i++){
+                            try {
+                                CurrencyRate currencyRate =  gson.fromJson(response.getJSONObject(i).toString(),CurrencyRate.class);
+                                currencyRates.add(currencyRate);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        CurrencysRatesListAdapter currencysRatesListAdapter = new CurrencysRatesListAdapter(context, currencyRates);
+                        currencyRatesList.setAdapter(currencysRatesListAdapter);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        String body;
+                        if (error.networkResponse != null){
+                            String statusCode = String.valueOf(error.networkResponse.statusCode);
+                            if(error.networkResponse.data!=null) {
+                                try {
+                                    body = new String(error.networkResponse.data,"UTF-8");
+                                    try {
+                                        JSONObject jsonError = new JSONObject(body);
+                                        if (statusCode.equals("406") || statusCode.equals("404")){
+                                            textErrors.setText(jsonError.getString("message"));
+                                        } else {
+                                            JSONArray errors = jsonError.getJSONArray("errors");
+                                            textErrors.setText("");
+                                            for (int i = 0; i < errors.length(); i++){
+                                                textErrors.setText(textErrors.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
+                                            }
+                                        }
+                                        textErrors.setVisibility(View.VISIBLE);
+                                    }catch (JSONException e){
+                                        e.printStackTrace();
+                                    }
+                                } catch (UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                })
+
+        {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> params = new HashMap<String, String>();
+                String creds = String.format("%s:%s",user.getEmail(),user.getPassword());
+                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.DEFAULT);
+                params.put("Authorization", auth);
+                return params;
+            }
+        };
+        Volley.newRequestQueue(this).add(jRequest);
     }
 
     private void initAccounts(){
@@ -134,8 +298,6 @@ public class MainActivity extends AppCompatActivity
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        textErrors.setText(response.toString());
-
                         Gson gson = new Gson();
                         for (int i =0; i < response.length(); i++){
                             try {
@@ -144,10 +306,8 @@ public class MainActivity extends AppCompatActivity
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-
                         }
-                        AccountsListAdapter accountsListAdapter = new AccountsListAdapter(context, accounts);
-                        accountsList = (ListView) findViewById(R.id.accounts_list);
+                        AccountsListAdapter accountsListAdapter = new AccountsListAdapter(context, accounts, user);
                         accountsList.setAdapter(accountsListAdapter);
                     }
                 },
@@ -171,6 +331,7 @@ public class MainActivity extends AppCompatActivity
                                                 textErrors.setText(textErrors.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
                                             }
                                         }
+                                        textErrors.setVisibility(View.VISIBLE);
                                     }catch (JSONException e){
                                         e.printStackTrace();
                                     }
@@ -204,8 +365,6 @@ public class MainActivity extends AppCompatActivity
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        textErrors.setText(response.toString());
-
                         Gson gson = new Gson();
                         for (int i =0; i < response.length(); i++){
                             try {
@@ -214,10 +373,8 @@ public class MainActivity extends AppCompatActivity
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-
                         }
                         TransactionsListAdapter transactionsListAdapter = new TransactionsListAdapter(context, transactions);
-                        transactionsList = (ListView) findViewById(R.id.transactions_list);
                         transactionsList.setAdapter(transactionsListAdapter);
                     }
                 },
@@ -241,6 +398,7 @@ public class MainActivity extends AppCompatActivity
                                                 textErrors.setText(textErrors.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
                                             }
                                         }
+                                        textErrors.setVisibility(View.VISIBLE);
                                     }catch (JSONException e){
                                         e.printStackTrace();
                                     }
@@ -264,7 +422,6 @@ public class MainActivity extends AppCompatActivity
         };
         Volley.newRequestQueue(this).add(jRequest);
     }
-
 
     @Override
     public void onBackPressed() {
@@ -303,27 +460,27 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
+        textErrors.setVisibility(View.GONE);
         if (id == R.id.nav_accounts) {
             accountsList.setVisibility(View.VISIBLE);
-            transactionsList.setVisibility(View.INVISIBLE);
-            topupLayout.setVisibility(View.INVISIBLE);
-            currencyRatesList.setVisibility(View.INVISIBLE);
+            transactionsList.setVisibility(View.GONE);
+            topupLayout.setVisibility(View.GONE);
+            currencyRatesList.setVisibility(View.GONE);
         } else if (id == R.id.nav_transactions) {
             transactionsList.setVisibility(View.VISIBLE);
-            accountsList.setVisibility(View.INVISIBLE);
-            topupLayout.setVisibility(View.INVISIBLE);
-            currencyRatesList.setVisibility(View.INVISIBLE);
+            accountsList.setVisibility(View.GONE);
+            topupLayout.setVisibility(View.GONE);
+            currencyRatesList.setVisibility(View.GONE);
         } else if (id == R.id.nav_currency_rates) {
             currencyRatesList.setVisibility(View.VISIBLE);
-            topupLayout.setVisibility(View.INVISIBLE);
-            accountsList.setVisibility(View.INVISIBLE);
-            transactionsList.setVisibility(View.INVISIBLE);
+            topupLayout.setVisibility(View.GONE);
+            accountsList.setVisibility(View.GONE);
+            transactionsList.setVisibility(View.GONE);
         } else if (id == R.id.nav_top_up) {
             topupLayout.setVisibility(View.VISIBLE);
-            accountsList.setVisibility(View.INVISIBLE);
-            transactionsList.setVisibility(View.INVISIBLE);
-            currencyRatesList.setVisibility(View.INVISIBLE);
+            accountsList.setVisibility(View.GONE);
+            transactionsList.setVisibility(View.GONE);
+            currencyRatesList.setVisibility(View.GONE);
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_logout) {

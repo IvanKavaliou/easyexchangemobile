@@ -11,31 +11,34 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:ignore="MissingConstraints">
 
         <TextView
             android:id="@+id/textErrors"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Errors"
+            android:visibility="gone"
             android:textColor="#f00"
             android:textStyle="bold" />
         <ListView
             android:id="@+id/accounts_list"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:visibility="visible"/>
 
         <ListView
             android:id="@+id/transactions_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="invisible" />
+            android:visibility="gone" />
 
         <ListView
             android:id="@+id/currecny_rates_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="invisible" />
+            android:visibility="gone" />
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/topupLayout"

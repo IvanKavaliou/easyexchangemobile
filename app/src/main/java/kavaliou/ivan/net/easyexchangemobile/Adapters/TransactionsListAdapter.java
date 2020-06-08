@@ -48,17 +48,23 @@ public class TransactionsListAdapter extends BaseAdapter {
 
         if ( v == null){
             v = LInflater.inflate(R.layout.transactions_list, parent, false);
-            textAccountCurrency = (TextView) v.findViewById(R.id.textAccountCurrency);
-            textTransactionType = (TextView) v.findViewById(R.id.textTransactionType);
-            textAmount = (TextView) v.findViewById(R.id.textAmount);
-            textDate = (TextView) v.findViewById(R.id.textDate);
 
-            Transaction transaction = getTransaction(position);
-            textAccountCurrency.setText(transaction.getAccount().getCurrency().name());
-            textTransactionType.setText(transaction.getTransaction().name());
-            textAmount.setText("Amount: "+transaction.getValue().toString());
-            textDate.setText(transaction.getDate().toString());
         }
+
+        textAccountCurrency = (TextView) v.findViewById(R.id.textAccountCurrency);
+        textTransactionType = (TextView) v.findViewById(R.id.textTransactionType);
+        textAmount = (TextView) v.findViewById(R.id.textAmount);
+        textDate = (TextView) v.findViewById(R.id.textDate);
+
+        Transaction transaction = getTransaction(position);
+        if(null == transaction.getAccount()){
+            textAccountCurrency.setText("TOP");
+        } else {
+            textAccountCurrency.setText(transaction.getAccount().getCurrency().name());
+        }
+        textTransactionType.setText(transaction.getTransaction().name());
+        textAmount.setText("Amount: "+transaction.getValue().toString());
+        textDate.setText(transaction.getDate().toString());
 
         return v;
     }

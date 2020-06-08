@@ -35,12 +35,18 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/buttonDelete"
+        android:id="@+id/buttonBuy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:text="-"
+        android:text="Buy"
         android:textSize="20dp"
-        android:layout_marginLeft="120dp"
+        android:layout_marginLeft="35dp"
+        android:textStyle="bold" />
+    <Button
+        android:id="@+id/buttonSell"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SEll"
+        android:textSize="20dp"
         android:textStyle="bold" />
 </LinearLayout>

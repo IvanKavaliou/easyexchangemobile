@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LoginActivity"
+    android:orientation="vertical">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:padding="5dp"
+        android:src="@drawable/ic_currency_rates"/>
+
+    <TextView
+        android:id="@+id/textCurrencyCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="USD"
+        android:textStyle="bold"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textSize="35dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:padding="2dp"
+        android:textColor="#4d4d4d" />
+
+    <LinearLayout android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textBid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bid: 1.3322"
+            android:textStyle="bold"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_marginLeft="10dp"
+            android:padding="2dp"
+            android:textColor="#4d4d4d" />
+        <TextView
+            android:id="@+id/textAsk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ask: 12.2222"
+            android:textStyle="bold"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_marginLeft="10dp"
+            android:padding="2dp"
+            android:textColor="#4d4d4d" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textCurrencyName"
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:text="dolar amerykański"
+        android:textAllCaps="true"
+        android:textColor="#4d4d4d"
+        android:textSize="12dp"
+        android:textStyle="bold"
+        android:layout_marginTop="15dp"
+        android:paddingLeft="5dp"/>
+
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/editValue"
+        android:layout_marginTop="60dp"
+        android:hint="Value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="numberDecimal"/>
+
+    <Button
+        android:id="@+id/buttonAction"
+        android:layout_marginTop="20dp"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="BUY/SELL"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/textErrorTransaction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="error"
+        android:textColor="#f00"
+        android:visibility="gone"
+        android:layout_marginTop="15dp" />
+
+    <pl.droidsonroids.gif.GifImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/scru"
+        />
+
+</LinearLayout>

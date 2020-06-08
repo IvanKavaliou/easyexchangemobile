@@ -1,6 +1,7 @@
 package kavaliou.ivan.net.easyexchangemobile.Adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,8 +11,12 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import kavaliou.ivan.net.easyexchangemobile.MainActivity;
 import kavaliou.ivan.net.easyexchangemobile.R;
+import kavaliou.ivan.net.easyexchangemobile.TransactionActivity;
 import kavaliou.ivan.net.easyexchangemobile.model.Account;
+import kavaliou.ivan.net.easyexchangemobile.model.User;
+import kavaliou.ivan.net.easyexchangemobile.utils.enums.TransactionType;
 
 public class AccountsListAdapter extends BaseAdapter {
 
@@ -34,10 +39,16 @@ public class AccountsListAdapter extends BaseAdapter {
         return position;
     }
 
-    public AccountsListAdapter(Context context, ArrayList<Account> data){
+    private Context context;
+
+    private User user;
+
+    public AccountsListAdapter(Context context, ArrayList<Account> data, User user){
+        this.user = user;
         list = data;
         LInflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.context = context;
     }
 
     @Override
@@ -46,20 +57,43 @@ public class AccountsListAdapter extends BaseAdapter {
         View v = convertView;
         TextView textCurrency;
         TextView textBalance;
-        Button buttonDelete;
+        final Button buttonBuy;
+        Button buttonSell;
 
         if ( v == null){
+            final Account account = getAccount(position);
             v = LInflater.inflate(R.layout.accounts_list, parent, false);
             textCurrency = (TextView) v.findViewById(R.id.textCurency);
             textBalance = (TextView) v.findViewById(R.id.textBalance);
-            buttonDelete = (Button) v.findViewById(R.id.buttonDelete);
 
-            Account account = getAccount(position);
+            buttonBuy = (Button) v.findViewById(R.id.buttonBuy);
+            buttonBuy.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openTransactionActivity(TransactionType.BUY, account);
+                }
+            });
+
+            buttonSell = (Button) v.findViewById(R.id.buttonSell);
+            buttonSell.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openTransactionActivity(TransactionType.SELL, account);
+                }
+            });
+
             textCurrency.setText(account.getCurrency().name());
             textBalance.setText("Balance: "+account.getValue().toString());
         }
 
         return v;
+    }
+
+    private void openTransactionActivity(TransactionType transactionType, Account account){
+        Intent i = new Intent(context,TransactionActivity.class);
+        i.putExtra("account", account);
+        i.putExtra("transactionType",transactionType);
+        context.startActivity(i);
     }
 
     public Account getAccount(int position){
