@@ -9,6 +9,7 @@
     android:orientation="vertical">
 
     <ImageView
+        android:id="@+id/imageLoginLogo"
         android:layout_width="wrap_content"
         android:layout_height="182dp"
         android:src="@drawable/ee_logo" />

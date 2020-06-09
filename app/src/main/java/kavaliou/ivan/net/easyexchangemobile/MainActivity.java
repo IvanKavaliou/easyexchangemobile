@@ -1,9 +1,13 @@
 package kavaliou.ivan.net.easyexchangemobile;
 
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentManager;
 import android.util.Base64;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -14,13 +18,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
@@ -30,7 +32,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 
@@ -41,11 +42,9 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import kavaliou.ivan.net.easyexchangemobile.Adapters.AccountsListAdapter;
 import kavaliou.ivan.net.easyexchangemobile.Adapters.CurrencysRatesListAdapter;
@@ -56,7 +55,6 @@ import kavaliou.ivan.net.easyexchangemobile.model.TopUp;
 import kavaliou.ivan.net.easyexchangemobile.model.Transaction;
 import kavaliou.ivan.net.easyexchangemobile.model.User;
 import kavaliou.ivan.net.easyexchangemobile.utils.enums.CurrencyType;
-import kavaliou.ivan.net.easyexchangemobile.utils.enums.TransactionType;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -79,6 +77,7 @@ public class MainActivity extends AppCompatActivity
     private static final String URL_GET_TRANSACTIONS ="http://192.168.0.101:8080/transactions";
     private static final String URL_GET_RATES ="http://192.168.0.101:8080/rates";
     private static final String URL_TOP_UP = "http://192.168.0.101:8080/topup";
+    private static final String URL_ADD_ACCOUNT = "http://192.168.0.101:8080/accounts/add/";
 
 
     @Override
@@ -92,8 +91,12 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+               LinearLayout addAccountLayout = (LinearLayout) findViewById(R.id.addAccountLayout);
+               if (addAccountLayout.getVisibility() == View.GONE){
+                   addAccountLayout.setVisibility(View.VISIBLE);
+               } else {
+                   addAccountLayout.setVisibility(View.GONE);
+               }
             }
         });
 
@@ -140,7 +143,7 @@ public class MainActivity extends AppCompatActivity
     private void initTopUP(){
         final EditText editTextTopUpValue = (EditText) findViewById(R.id.editTextTopUpValue);
         topupLayout = (LinearLayout) findViewById(R.id.topupLayout);
-        TextView textBalance = (TextView) findViewById(R.id.textBalance);
+        TextView textBalance = (TextView) findViewById(R.id.textBalanceTopUp);
         textBalance.setText("Balance: " + user.getBalance()+ " PLN");
         Button buttonTopUp = (Button) findViewById(R.id.buttonTopUp);
         buttonTopUp.setOnClickListener(new View.OnClickListener() {
@@ -265,6 +268,90 @@ public class MainActivity extends AppCompatActivity
                                                 textErrors.setText(textErrors.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
                                             }
                                         }
+                                        currencyRatesList.setVisibility(View.GONE);
+                                        textErrors.setVisibility(View.VISIBLE);
+                                    }catch (JSONException e){
+                                        e.printStackTrace();
+                                    }
+                                } catch (UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                })
+
+        {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> params = new HashMap<String, String>();
+                String creds = String.format("%s:%s",user.getEmail(),user.getPassword());
+                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.DEFAULT);
+                params.put("Authorization", auth);
+                return params;
+            }
+        };
+        Volley.newRequestQueue(this).add(jRequest);
+    }
+
+    private void initAddAccounts(){
+        String[] currencys = new String[CurrencyType.values().length];
+        ArrayList<CurrencyType> cts = new ArrayList<>();
+        for (Account a : accounts){
+            cts.add(a.getCurrency());
+        }
+        int i = 0;
+        for (CurrencyType c:CurrencyType.values()){
+            if (!cts.contains(c)){
+                currencys[i++] = c.name();
+            }
+        }
+        final String[] curTrans = new String[i];
+        for (int t=0; t < i; t++){
+            curTrans[t]=currencys[t];
+        }
+        final ListView accountAddList = (ListView) findViewById(R.id.accountAddList);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,  android.R.layout.simple_list_item_single_choice,curTrans);
+        accountAddList.setAdapter(adapter);
+        Button buttonAccountAdd = (Button) findViewById(R.id.buttonAccountAdd);
+        buttonAccountAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addAccount(CurrencyType.valueOf(curTrans[accountAddList.getCheckedItemPosition()]));
+            }
+        });
+    }
+
+    private void addAccount(CurrencyType currencyType){
+        final Context context = this;
+        //QUEEE
+        JsonObjectRequest jRequest = new JsonObjectRequest(Request.Method.GET, URL_ADD_ACCOUNT + currencyType.name(), null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        update();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        String body;
+                        if (error.networkResponse != null){
+                            String statusCode = String.valueOf(error.networkResponse.statusCode);
+                            if(error.networkResponse.data!=null) {
+                                try {
+                                    body = new String(error.networkResponse.data,"UTF-8");
+                                    try {
+                                        JSONObject jsonError = new JSONObject(body);
+                                        if (statusCode.equals("406") || statusCode.equals("404")){
+                                            textErrors.setText(jsonError.getString("message"));
+                                        } else {
+                                            JSONArray errors = jsonError.getJSONArray("errors");
+                                            textErrors.setText("");
+                                            for (int i = 0; i < errors.length(); i++){
+                                                textErrors.setText(textErrors.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
+                                            }
+                                        }
                                         textErrors.setVisibility(View.VISIBLE);
                                     }catch (JSONException e){
                                         e.printStackTrace();
@@ -309,6 +396,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         AccountsListAdapter accountsListAdapter = new AccountsListAdapter(context, accounts, user);
                         accountsList.setAdapter(accountsListAdapter);
+                        initAddAccounts();
                     }
                 },
                 new Response.ErrorListener() {
@@ -462,21 +550,29 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         textErrors.setVisibility(View.GONE);
         if (id == R.id.nav_accounts) {
+            initAccounts();
+            queue.start();
             accountsList.setVisibility(View.VISIBLE);
             transactionsList.setVisibility(View.GONE);
             topupLayout.setVisibility(View.GONE);
             currencyRatesList.setVisibility(View.GONE);
         } else if (id == R.id.nav_transactions) {
+            initTransactions();
+            queue.start();
             transactionsList.setVisibility(View.VISIBLE);
             accountsList.setVisibility(View.GONE);
             topupLayout.setVisibility(View.GONE);
             currencyRatesList.setVisibility(View.GONE);
         } else if (id == R.id.nav_currency_rates) {
+            initCurrencyRates();
+            queue.start();
             currencyRatesList.setVisibility(View.VISIBLE);
             topupLayout.setVisibility(View.GONE);
             accountsList.setVisibility(View.GONE);
             transactionsList.setVisibility(View.GONE);
         } else if (id == R.id.nav_top_up) {
+            initTopUP();
+            queue.start();
             topupLayout.setVisibility(View.VISIBLE);
             accountsList.setVisibility(View.GONE);
             transactionsList.setVisibility(View.GONE);
@@ -484,7 +580,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_logout) {
-
+            finish();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

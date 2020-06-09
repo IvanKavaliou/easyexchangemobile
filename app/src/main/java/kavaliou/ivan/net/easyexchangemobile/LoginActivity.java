@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -34,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button buttonSignIn;
     private CheckBox checkRegister;
     private TextView errorTextView;
+    private ImageView imageLoginLogo;
 
     private static String URL_LOGIN = "http://192.168.0.101:8080/login";
     private static String URL_REGISTRATION = "http://192.168.0.101:8080/registration";
@@ -54,15 +56,36 @@ public class LoginActivity extends AppCompatActivity {
         editPasswordRepeat = (EditText) findViewById(R.id.editPasswordRepeat);
         errorTextView = (TextView) findViewById(R.id.errorTextView);
 
+        imageLoginLogo = (ImageView) findViewById(R.id.imageLoginLogo);
+        imageLoginLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editEmail.setText("user@user.com");
+                editPassword.setText("user");
+            }
+        });
+
         buttonSignIn = (Button) findViewById(R.id.buttonSignIn);
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!checkRegister.isChecked()){
-                    login();
-                } else {
-                    regisrtation();
-                }
+                    if (!editEmail.getText().toString().trim().isEmpty()){
+                        if (!editPassword.getText().toString().isEmpty()){
+                            if (!checkRegister.isChecked()){
+                                login();
+                            } else {
+                                if (editPassword.getText().toString().equals(editPasswordRepeat.getText().toString())){
+                                    regisrtation();
+                                } else {
+                                    errorTextView.setText("Passwords can be equals!");
+                                }
+                            }
+                        } else {
+                            errorTextView.setText("Password cannot be emprt!");
+                        }
+                    } else {
+                        errorTextView.setText("Email canot be empty!");
+                    }
                 queue.start();
             }
         });
@@ -90,33 +113,26 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void regisrtation() {
-
-    }
-
-    private void login(){
-        editEmail.setText("user@user.com");
-        editPassword.setText("user");
         Map<String, String> params = new HashMap();
         params.put("email", editEmail.getText().toString().trim().toLowerCase());
         params.put("password", editPassword.getText().toString());
         JSONObject parameters = new JSONObject(params);
 
-        JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, URL_LOGIN, parameters, new Response.Listener<JSONObject>() {
+        JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, URL_REGISTRATION, parameters, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                    Gson gson = new Gson();
-                    User user = gson.fromJson(response.toString(),User.class);
-                    errorTextView.setText(user.toString());
-                    startMainActivity(user);
+                Gson gson = new Gson();
+                User user = gson.fromJson(response.toString(),User.class);
+                //errorTextView.setText(user.toString());
+                startMainActivity(user);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                String body;
-                String statusCode = String.valueOf(error.networkResponse.statusCode);
-                if(error.networkResponse.data!=null) {
+                if(null != error.networkResponse && error.networkResponse.data!=null) {
                     try {
-                        body = new String(error.networkResponse.data,"UTF-8");
+                        String statusCode = String.valueOf(error.networkResponse.statusCode);
+                        String body = new String(error.networkResponse.data,"UTF-8");
                         try {
                             JSONObject jsonError = new JSONObject(body);
                             if (statusCode.equals("406") || statusCode.equals("404")){
@@ -130,9 +146,58 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         }catch (JSONException e){
                             e.printStackTrace();
+                            errorTextView.setText(e.getMessage());
                         }
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
+                        errorTextView.setText(e.getMessage());
+                    }
+                }
+            }
+        });
+
+        Volley.newRequestQueue(this).add(jsonRequest);
+    }
+
+    private void login(){
+        Map<String, String> params = new HashMap();
+        params.put("email", editEmail.getText().toString().trim().toLowerCase());
+        params.put("password", editPassword.getText().toString());
+        JSONObject parameters = new JSONObject(params);
+
+        JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, URL_LOGIN, parameters, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                    Gson gson = new Gson();
+                    User user = gson.fromJson(response.toString(),User.class);
+                    //errorTextView.setText(user.toString());
+                    startMainActivity(user);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                if(null != error.networkResponse && error.networkResponse.data!=null) {
+                    try {
+                        String statusCode = String.valueOf(error.networkResponse.statusCode);
+                        String body = new String(error.networkResponse.data,"UTF-8");
+                        try {
+                            JSONObject jsonError = new JSONObject(body);
+                            if (statusCode.equals("406") || statusCode.equals("404")){
+                                errorTextView.setText(jsonError.getString("message"));
+                            } else {
+                                JSONArray errors = jsonError.getJSONArray("errors");
+                                errorTextView.setText("");
+                                for (int i = 0; i < errors.length(); i++){
+                                    errorTextView.setText(errorTextView.getText() + errors.get(i).toString() + System.getProperty("line.separator"));
+                                }
+                            }
+                        }catch (JSONException e){
+                            e.printStackTrace();
+                            errorTextView.setText(e.getMessage());
+                        }
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                        errorTextView.setText(e.getMessage());
                     }
                 }
             }

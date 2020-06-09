@@ -29,6 +29,6 @@
         app:backgroundTint="@color/colorPrimary"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@drawable/ic_currency_rates" />
+        app:srcCompat="@drawable/ic_currency" />
 
 </android.support.design.widget.CoordinatorLayout>

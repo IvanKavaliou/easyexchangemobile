@@ -25,8 +25,27 @@
         <ListView
             android:id="@+id/accounts_list"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="300dp"
             android:visibility="visible"/>
+
+        <LinearLayout
+            android:id="@+id/addAccountLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:orientation="vertical">
+            <ListView
+                android:id="@+id/accountAddList"
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:choiceMode="singleChoice"/>
+            <Button
+                android:id="@+id/buttonAccountAdd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ADD"/>
+        </LinearLayout>
+
 
         <ListView
             android:id="@+id/transactions_list"
@@ -48,7 +67,7 @@
             android:visibility="invisible">
 
             <TextView
-                android:id="@+id/textBalance"
+                android:id="@+id/textBalanceTopUp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Balance: "

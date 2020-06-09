@@ -2,6 +2,7 @@ package kavaliou.ivan.net.easyexchangemobile;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -51,6 +52,8 @@ public class TransactionActivity extends AppCompatActivity {
     }
 
     private void init(){
+        Button buttonAction = (Button) findViewById(R.id.buttonAction);
+        buttonAction.setText(transactionType.name());
         JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, RATE_URL+account.getCurrency().name(), null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -67,15 +70,15 @@ public class TransactionActivity extends AppCompatActivity {
                 textBid.setText("Bid: " + currencyRate.getBid().toString());
                 textAsk.setText("Ask: " + currencyRate.getAsk().toString());
                 textCurrencyName.setText(currencyRate.getCurrency());
-                buttonAction.setText(transactionType.name());
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 String body;
-                String statusCode = String.valueOf(error.networkResponse.statusCode);
-                if(error.networkResponse.data!=null) {
+                String statusCode;
+                if(null != error.networkResponse && error.networkResponse.data!=null) {
                     try {
+                        statusCode = String.valueOf(error.networkResponse.statusCode);
                         body = new String(error.networkResponse.data,"UTF-8");
                         try {
                             JSONObject jsonError = new JSONObject(body);
@@ -90,11 +93,14 @@ public class TransactionActivity extends AppCompatActivity {
                             }
                         }catch (JSONException e){
                             e.printStackTrace();
+                            textErrorTransaction.setText(e.getMessage());
                         }
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
+                        textErrorTransaction.setText(e.getMessage());
                     }
                 }
+                textErrorTransaction.setVisibility(View.VISIBLE);
             }
         });
 
