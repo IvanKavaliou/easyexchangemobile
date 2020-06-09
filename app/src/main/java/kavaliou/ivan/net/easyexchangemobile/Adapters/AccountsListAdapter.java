@@ -1,5 +1,6 @@
 package kavaliou.ivan.net.easyexchangemobile.Adapters;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -39,11 +40,11 @@ public class AccountsListAdapter extends BaseAdapter {
         return position;
     }
 
-    private Context context;
+    private MainActivity context;
 
     private User user;
 
-    public AccountsListAdapter(Context context, ArrayList<Account> data, User user){
+    public AccountsListAdapter(MainActivity context, ArrayList<Account> data, User user){
         this.user = user;
         list = data;
         LInflater = (LayoutInflater) context
@@ -61,8 +62,9 @@ public class AccountsListAdapter extends BaseAdapter {
         Button buttonSell;
 
         if ( v == null){
-            final Account account = getAccount(position);
             v = LInflater.inflate(R.layout.accounts_list, parent, false);
+        }
+            final Account account = getAccount(position);
             textCurrency = (TextView) v.findViewById(R.id.textCurency);
             textBalance = (TextView) v.findViewById(R.id.textBalance);
 
@@ -81,10 +83,9 @@ public class AccountsListAdapter extends BaseAdapter {
                     openTransactionActivity(TransactionType.SELL, account);
                 }
             });
-
             textCurrency.setText(account.getCurrency().name());
             textBalance.setText("Balance: "+account.getValue().toString());
-        }
+
 
         return v;
     }
@@ -93,7 +94,8 @@ public class AccountsListAdapter extends BaseAdapter {
         Intent i = new Intent(context,TransactionActivity.class);
         i.putExtra("account", account);
         i.putExtra("transactionType",transactionType);
-        context.startActivity(i);
+        i.putExtra("user",user);
+        context.startActivityForResult(i, 100);
     }
 
     public Account getAccount(int position){

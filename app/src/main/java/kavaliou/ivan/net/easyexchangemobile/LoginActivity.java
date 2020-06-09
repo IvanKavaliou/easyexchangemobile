@@ -73,9 +73,11 @@ public class LoginActivity extends AppCompatActivity {
                         if (!editPassword.getText().toString().isEmpty()){
                             if (!checkRegister.isChecked()){
                                 login();
+                                errorTextView.setText("");
                             } else {
                                 if (editPassword.getText().toString().equals(editPasswordRepeat.getText().toString())){
                                     regisrtation();
+                                    errorTextView.setText("");
                                 } else {
                                     errorTextView.setText("Passwords can be equals!");
                                 }
@@ -152,6 +154,8 @@ public class LoginActivity extends AppCompatActivity {
                         e.printStackTrace();
                         errorTextView.setText(e.getMessage());
                     }
+                } else {
+                    errorTextView.setText("Service is unavailable :(");
                 }
             }
         });
@@ -199,6 +203,8 @@ public class LoginActivity extends AppCompatActivity {
                         e.printStackTrace();
                         errorTextView.setText(e.getMessage());
                     }
+                } else {
+                    errorTextView.setText("Service is unavailable :(");
                 }
             }
         });

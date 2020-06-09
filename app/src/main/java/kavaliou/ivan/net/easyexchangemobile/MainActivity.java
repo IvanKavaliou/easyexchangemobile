@@ -1,13 +1,10 @@
 package kavaliou.ivan.net.easyexchangemobile;
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+
 import android.content.Context;
-import android.opengl.Visibility;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentManager;
 import android.util.Base64;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -24,7 +21,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -34,18 +30,14 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
 import kavaliou.ivan.net.easyexchangemobile.Adapters.AccountsListAdapter;
 import kavaliou.ivan.net.easyexchangemobile.Adapters.CurrencysRatesListAdapter;
 import kavaliou.ivan.net.easyexchangemobile.Adapters.TransactionsListAdapter;
@@ -86,7 +78,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,6 +121,15 @@ public class MainActivity extends AppCompatActivity
         initCurrencyRates();
 
         queue.start();
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==100){
+            update();
+        }
     }
 
     private void update(){
@@ -295,6 +295,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initAddAccounts(){
+        AccountsListAdapter accountsListAdapter = new AccountsListAdapter(this, accounts, user);
+        accountsList.setAdapter(accountsListAdapter);
         String[] currencys = new String[CurrencyType.values().length];
         ArrayList<CurrencyType> cts = new ArrayList<>();
         for (Account a : accounts){
@@ -394,8 +396,7 @@ public class MainActivity extends AppCompatActivity
                                 e.printStackTrace();
                             }
                         }
-                        AccountsListAdapter accountsListAdapter = new AccountsListAdapter(context, accounts, user);
-                        accountsList.setAdapter(accountsListAdapter);
+
                         initAddAccounts();
                     }
                 },

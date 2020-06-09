@@ -3,7 +3,6 @@ package kavaliou.ivan.net.easyexchangemobile.utils.enums;
 public enum CurrencyType {
     USD,
     EUR,
-    PLN,
     AUD,
     CAD,
     HUF,
